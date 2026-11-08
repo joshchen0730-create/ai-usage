@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101827">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>AI Usage Monitor</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#101827;color:white;margin:0;padding:24px}
+h1{font-size:27px;margin:20px 0 8px}
+p{color:#aab6c8}
+.card{background:#202c40;border-radius:18px;padding:20px;margin:16px 0}
+h2{margin:0 0 14px}
+label{display:block;margin-top:12px;color:#cbd5e1}
+input{box-sizing:border-box;width:100%;padding:12px;margin-top:6px;background:#111b2b;color:white;border:1px solid #526079;border-radius:10px}
+button{background:#4778ed;color:white;border:0;border-radius:10px;padding:12px 18px;margin-top:15px}
+small{color:#aab6c8}
+</style>
+</head>
+<body>
+<h1>AI Usage Monitor</h1>
+<p>個人 AI 額度管理面板</p>
+<div id="apps"></div>
+<script>
+const names=["ChatGPT","Claude","Gemini"];
+const root=document.getElementById("apps");
+names.forEach((name,i)=>{
+const key="ai-monitor-"+i;
+const saved=JSON.parse(localStorage.getItem(key)||"{}");
+const card=document.createElement("section");
+card.className="card";
+card.innerHTML='<h2>'+name+'</h2><label>剩餘次數（手動輸入）<input type="number" min="0" id="quota'+i+'"></label><label>下次重置時間<input type="datetime-local" id="reset'+i+'"></label><p id="count'+i+'"></p><button id="save'+i+'">儲存設定</button>';
+root.appendChild(card);
+const quota=document.getElementById("quota"+i);
+const reset=document.getElementById("reset"+i);
+quota.value=saved.quota??"";
+reset.value=saved.reset??"";
+document.getElementById("save"+i).onclick=()=>{
+localStorage.setItem(key,JSON.stringify({quota:quota.value,reset:reset.value}));
+update();
+};
+function update(){
+const target=new Date(reset.value).getTime();
+const diff=target-Date.now();
+const output=document.getElementById("count"+i);
+if(!reset.value||!Number.isFinite(target)){output.textContent="尚未設定重置時間";return;}
+if(diff<=0){output.textContent="已到設定的重置時間";return;}
+const hours=Math.floor(diff/3600000);
+const mins=Math.floor((diff%3600000)/60000);
+output.textContent="距離重置："+hours+" 小時 "+mins+" 分鐘";
+}
+update();
+setInterval(update,30000);
+});
+</script>
+</body>
+</html>
